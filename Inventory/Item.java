@@ -1,5 +1,7 @@
 package Inventory;
 
+import java.util.*;
+
 import Pokemon.Pokemon;
 import Engine.Battle;
 
@@ -97,7 +99,14 @@ public abstract class Item
         return String.format("Name: %s | Description: %s", this.name, this.description);
     }
 
+    public void waitForEnter(Scanner scan)
+    {
+        // wait for player's confirmation
+        System.out.print ("Press Enter to continue...");
+        scan.nextLine ();
+    }
+
     // return true: item is used | false: item is not used
-    public abstract boolean use (Battle battle, Pokemon pokemon);
+    public abstract boolean use (Battle battle, Pokemon pokemon, Scanner scan);
 
 }
