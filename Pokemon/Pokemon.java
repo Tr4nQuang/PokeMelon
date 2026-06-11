@@ -145,6 +145,45 @@ public class Pokemon {
 
     }
 
+    // restore pokemon with full saved state
+    public Pokemon (Pokedex pokedex, int inputId, int inputLevel, int inputExp, int inputHp, int inputIvHp, int inputIvAtk, int inputIvDfs, int inputIvSpd)
+    {
+
+        // set IVs from save data
+        this.ivHp = inputIvHp;
+        this.ivAtk = inputIvAtk;
+        this.ivDfs = inputIvDfs;
+        this.ivSpd = inputIvSpd;
+
+        // inputs for pokemon information
+        this.id = inputId;
+        this.level = inputLevel;
+
+        Pokemon defaultPokemon = pokedex.getPokedex()[this.id];
+
+        this.name = defaultPokemon.getName();
+        this.gen = defaultPokemon.getGen();
+        this.rarity = defaultPokemon.getRarity();
+
+        this.type1 = defaultPokemon.getType1();
+        this.type2 = defaultPokemon.getType2();
+
+        this.moveList = new ArrayList<Move>();
+        this.moveActivated = new Move[4];
+
+        calculateStats(pokedex);
+        this.hp = Math.max(0, Math.min(inputHp, this.maxHp));
+
+        this.catchRate = defaultPokemon.getCatchRate();
+        this.baseExp = defaultPokemon.getBaseExp();
+        this.growthRate = defaultPokemon.getGrowthRate();
+        this.exp = inputExp;
+
+        this.evolutionLevel = defaultPokemon.getEvolutionLevel();
+        this.evolutionName = defaultPokemon.getEvolutionName();
+        
+    }
+
 
     // -------------------- GETTERS -------------------- //
 
