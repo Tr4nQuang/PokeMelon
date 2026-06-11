@@ -1,5 +1,7 @@
 package Inventory.Item_Types;
 
+import java.util.*;
+
 import Inventory.*;
 import Pokemon.*;
 import Engine.Battle;
@@ -51,19 +53,21 @@ public class RevivingItem extends Item
 
     // using item
     @Override
-    public boolean use (Battle battle, Pokemon playerPokemon)
+    public boolean use (Battle battle, Pokemon playerPokemon, Scanner scan)
     {
 
         // if pokemon have not been fainted yet, cannot use revive item
         if (playerPokemon.getHp() > 0)
         {
-            System.out.println ("Cannot use " + super.getName() + " on " + playerPokemon.getName() + " because it is not fainted!");
+            System.out.println ("\n⚠️ Cannot use " + super.getName() + " on " + playerPokemon.getName() + " because it is not fainted!");
+            waitForEnter(scan);
             return false;
         }
 
         playerPokemon.addHp (playerPokemon.getMaxHp() * percentHeal / 100);
 
-        System.out.println ("Used " + super.getName() + " on " + playerPokemon.getName() + " to revive it and healed " + playerPokemon.getHp() + " HP!");
+        System.out.println ("\nUsed " + super.getName() + " on " + playerPokemon.getName() + " to revive it and healed " + playerPokemon.getHp() + " HP!");
+        waitForEnter(scan);
         return true;
 
     }
