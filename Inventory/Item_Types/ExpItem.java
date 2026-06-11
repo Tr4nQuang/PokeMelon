@@ -1,5 +1,7 @@
 package Inventory.Item_Types;
 
+import java.util.*;
+
 import Inventory.Item;
 import Inventory.Itemdex;
 import Pokemon.*;
@@ -52,22 +54,23 @@ public class ExpItem extends Item
 
     // -------------------- OPERATIONS -------------------- //
 
-
     // using item
-    public boolean use (Battle battle, Pokemon playerPokemon)
+    public boolean use (Battle battle, Pokemon playerPokemon, Scanner scan)
     {
 
         // if pokemon is fainted, cannot use exp item
         if (playerPokemon.getHp() == 0)
         {
-            System.out.println ("Cannot use " + super.getName() + " on " + playerPokemon.getName() + " because it is fainted!");
+            System.out.println ("\n⚠️ Cannot use " + super.getName() + " on " + playerPokemon.getName() + " because it is fainted!");
+            waitForEnter(scan);
             return false;
         }
 
         // if pokemon is in battle, cannot use exp item
         if (battle.checkBattleStatus())
         {
-            System.out.println ("Cannot use " + super.getName() + " on " + playerPokemon.getName() + " because it is in battle!");
+            System.out.println ("\n⚠️ Cannot use " + super.getName() + " on " + playerPokemon.getName() + " because it is in battle!");
+            waitForEnter(scan);
             return false;
         }
 
@@ -75,7 +78,8 @@ public class ExpItem extends Item
         playerPokemon.addExp(this.expAmount);
         int expAfter = playerPokemon.getExp();
 
-        System.out.println ("Used " + super.getName() + " on " + playerPokemon.getName() + " and gained " + (expAfter - expBefore) + " EXP!");
+        System.out.println ("\nUsed " + super.getName() + " on " + playerPokemon.getName() + " and gained " + (expAfter - expBefore) + " EXP!");
+        waitForEnter(scan);
         return true;
 
     }
