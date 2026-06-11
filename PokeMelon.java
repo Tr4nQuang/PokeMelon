@@ -1,10 +1,11 @@
 
 //import javax.swing.*;
 //import java.awt.event.*;
-import java.io.File;
+import java.io.*;
 import java.util.*;
 
 import Map.*;
+import Move.Move;
 import Move.Movedex;
 import Pokemon.*;
 import Engine.*;
@@ -19,39 +20,63 @@ class PokeMelon
 		// -------------------- FIELDS -------------------- //
 
 
-		// setting fields
+		// setting fields & Engines
+		Scanner scan = new Scanner(System.in);
 		GameMap map = new GameMap ();
+
+		Battle battle = new Battle();
 		DisplayMachine displayMachine = new DisplayMachine();
+		NewGameEngine newGameEngine = new NewGameEngine();
+		FileManager fileManager = new FileManager();
+		SortingMachine sortingMachine = new SortingMachine();
+		SpawningMachine spawner = new SpawningMachine();
 
 		// dictionaries
 		Pokedex pokedex = new Pokedex();
 		Movedex movedex = new Movedex();
 		Itemdex itemdex = new Itemdex();
-
+		
 		// game fields
-		Player player = new Player ("Quang");
-		player.getParty().addPokemon(new Pokemon(pokedex, 243, 30));
-		player.determineHighestLevel();;
-		player.setCurrentArea(new Area ("Kiwi Village", 8));
-		SpawningMachine spawner = new SpawningMachine();
-		Battle battle = new Battle();
+		Player player = new Player("PokeMelon");
 
-		Scanner scan = new Scanner(System.in);
 
+
+
+		// -------------------- -------------------- G A M E P L A Y -------------------- -------------------- //
+
+
+
+
+		// if save file does not exist => New Player
+		if (!fileManager.checkSaveFile()) player = newGameEngine.startNewJourney ();
+
+		// if save file exists => load player from save file
+		else player = fileManager.loadGame();
+
+
+		// start the game loop
 		while (true)
 		{
 
 			int gameChoice = -1;
 
 			displayMachine.displayMainMenu(player);
-			gameChoice = scan.nextInt();
+			gameChoice = parseInt(scan.nextLine());
 
 			if (gameChoice == 1)
 			{
 
+				// check the eligibility for entering battle
+				if (player.getLeadPokemon() == null)
+				{
+					System.out.println ("  You don't have any Pokémon left!\nHead to the nearest Pokémon Center");
+					waitForEnter(scan);
+					continue;
+				}
+
 				// spawn the wild pokemon
 				ArrayList wildPokemon = new ArrayList<>();
-				wildPokemon.add (spawner.spawnPokemon(player, player.getCurrentArea()));
+				wildPokemon.add (spawner.spawnPokemon(player));
 				Trainer wildTrainer = new Trainer("Wild", new Party(wildPokemon));
 				battle = new Battle(player, wildTrainer, true);
 
@@ -60,7 +85,20 @@ class PokeMelon
 
 			}
 
-			if (gameChoice == 2) fightNPCs(player, displayMachine, scan, spawner, pokedex);
+			if (gameChoice == 2)
+			{
+
+				// check the eligibility for entering battle
+				if (player.getLeadPokemon() == null)
+				{
+					System.out.println ("  You don't have any Pokémon left!\nHead to the nearest Pokémon Center");
+					waitForEnter(scan);
+					continue;
+				}
+
+				fightNPCs(player, displayMachine, scan, spawner, pokedex);
+
+			}
 
 			if (gameChoice == 3) pokemonCentre(player, displayMachine, scan);
 
@@ -68,7 +106,7 @@ class PokeMelon
 
 			if (gameChoice == 6) displayInventory(player, displayMachine, scan);
 
-			//if (gameChoice == 7) saveGame(player, displayMachine, scan);
+			if (gameChoice == 7) saveGame(fileManager, player, scan);
 
 			if (gameChoice == 8) giftCode(player, displayMachine, scan);
 
@@ -81,7 +119,44 @@ class PokeMelon
 	}
 
 
-	// -------------------- METHODS -------------------- //
+	// -------------------- HELPERS -------------------- //
+
+
+	public static int parseInt (String inpuString)
+    {
+
+        int ans = 0;
+        int coef = 1;
+
+        for (int i = 0; i < inpuString.length(); i++)
+        {
+
+            char c = inpuString.charAt(i);
+
+            if (i == 0 && c == '-') coef *= -1;
+
+            else if ('0' <= c && c <= '9') ans = ans * 10 + (c - '0');
+
+            else
+            {
+                System.out.println ("parseInt Error: this string does not contain a valid int");
+                return -1;
+            }
+
+        }
+
+        return ans * coef;
+
+    }
+
+	private static void waitForEnter(Scanner scan)
+	{
+		System.out.print("\nPress Enter to continue...");
+		scan.nextLine();
+	}
+
+
+	// -------------------- Option 1 (also is used for 2): Fight Wild Pokemon -------------------- //
 
 
 	public static void fighting (Battle inputBattle, DisplayMachine inputDisplayMachine, Scanner scan)
@@ -112,41 +187,45 @@ class PokeMelon
 			if (!(inputBattle.getIsPlayerFirst() ^ inputBattle.getTurn() % 2 != 0)) // player's turn
 			{
 
-				choice = scan.nextInt();
-				scan.nextLine();
+				choice = parseInt(scan.nextLine());
 
-				if (choice == 1) combatMessage = inputBattle.fightOption();
-				if (choice == 2) inputBattle.bagOption();
-				if (choice == 3) inputBattle.pokemonOption();
+				if (choice == 1) combatMessage = inputBattle.fightOption(scan);
+				if (choice == 2) inputBattle.bagOption(scan);
+				if (choice == 3) inputBattle.pokemonOption(scan);
 				if (choice == 4) combatMessage = inputBattle.runOption();
 
 				inputDisplayMachine.displayBattleMenu(inputBattle, false);
-				System.out.println (combatMessage);
+				
+				// only display combatMessage when it's not empty & reset the message immediately after displaying
+				if (!combatMessage.equals(""))
+				{
+					System.out.println (combatMessage);
+					combatMessage = "";
+				}
+				
 				waitForEnter(scan);
 
 			}
 
 			else // enemy's turn
 			{
-				combatMessage = inputBattle.enemyAttack();
+				combatMessage = inputBattle.enemyAttack(); // enemy do the attack
 
 				inputDisplayMachine.displayBattleMenu(inputBattle, false);
-				System.out.println (combatMessage);
+				
+				// only display combatMessage when it's not empty & reset the message immediately after displaying
+				if (!combatMessage.equals(""))
+				{
+					System.out.println (combatMessage);
+					combatMessage = "";
+				}
+
 				waitForEnter(scan);
 				
 			}
 
 		}
 
-		inputDisplayMachine.displayBattleMenu(inputBattle, false);
-		waitForEnter(scan);
-
-	}
-
-	private static void waitForEnter(Scanner scan)
-	{
-		System.out.print("\nPress Enter to continue...");
-		scan.nextLine();
 	}
 
 
@@ -163,21 +242,17 @@ class PokeMelon
 		Party npcParty = new Party();
 		int partySize = ran.nextInt(6) + 1; // 1 to 6 Pokemon
 
-		// Create a temporary area for spawning Pokemon
-		Area tempArea = new Area("Battle Arena", 1);
-
 		for (int i = 0; i < partySize; i++)
 		{
+
 			// Use spawner to generate valid Pokemon
-			Pokemon npcPokemon = spawner.spawnPokemon(player, tempArea);
-			if (npcPokemon != null)
-			{
-				npcParty.addPokemon(npcPokemon);
-			}
+			Pokemon npcPokemon = spawner.spawnPokemon(player);
+			if (npcPokemon != null) npcParty.addPokemon(npcPokemon);
+
 		}
 
 		// Create NPC trainer
-		String[] npcNames = {"Kevin", "Henry", "Ray", "Ryan", "Andrew", "Jasper", "Kerry", "Doraemon"};
+		String[] npcNames = {"Kevin Apple", "Henry Pineapple", "Ray Tangerine", "Kerry Banana", "Kimberly Strawberry", "Officer Stanley Sugarcane", "Lord Dragon Fruit", "Shinnosuke Coconut", "Doraemon Blueberry"};
 		String npcName = npcNames[ran.nextInt(npcNames.length)];
 		Trainer npcTrainer = new Trainer(npcName, npcParty);
 
@@ -185,7 +260,7 @@ class PokeMelon
 		inputDisplayMachine.clearScreen();
 		String border = "==========================================================";
 		System.out.println(border);
-		System.out.println("           ⚔️ TRAINER BATTLE ⚔️");
+		System.out.println("                     ⚔️ TRAINER BATTLE ⚔️");
 		System.out.println(border);
 		System.out.println("\n  You encountered " + npcName.toUpperCase() + "!");
 		System.out.println("  " + npcName + " has " + npcParty.getSize() + " Pokemon!");
@@ -193,7 +268,6 @@ class PokeMelon
 		npcParty.display();
 		System.out.println("\n" + border);
 		System.out.print("\nPress Enter to continue...");
-		scan.nextLine();
 		scan.nextLine();
 
 		// Create and start battle
@@ -218,7 +292,7 @@ class PokeMelon
 
 			String border = "=========================================================";
 			System.out.println(border);
-			System.out.println("           🏥 POKEMON CENTRE 🏥");
+			System.out.println("		  🏥 POKÉMON CENTRE 🏥");
 			System.out.println(border);
 
 			System.out.println("\n  Welcome to the Pokemon Centre!");
@@ -230,23 +304,37 @@ class PokeMelon
 			System.out.println(border);
 			System.out.print("> ");
 
-			choice = scan.nextInt();
-			scan.nextLine();
+			choice = parseInt(scan.nextLine());
 
-			if (choice == 1)
+			if (choice == 1) // heal pokemons
 			{
 
-				// Heal all Pokemon in party
-				inputDisplayMachine.clearScreen();
+				// Heal all Pokemon in party (HP & move's PP)
 				System.out.println("Healing your Pokemon...");
 
 				for (int i = 0; i < player.getParty().getSize(); i++)
 				{
+
 					Pokemon p = player.getParty().getPokemon(i);
+
 					if (p != null)
 					{
+
+						// reset hp of pokemon
 						p.setHp(p.getMaxHp());
+						
+						// reset all the PP of activated moves
+						for (Move m : p.getMoveActivated())
+						{
+							// only reset PP once m is defined
+							if (m != null) m.setCurrentPP(m.getMaxPP());
+						}
+
+						// reset all the PP of possible moves
+						for (Move m : p.getMoveList()) m.setCurrentPP(m.getMaxPP());
+
 					}
+
 				}
 
 				System.out.println("All your Pokemon have been fully healed!");
@@ -254,20 +342,10 @@ class PokeMelon
 
 			}
 
-			else if (choice == 2)
-			{
+			// Open Boxes
+			else if (choice == 2) displayBoxesMenu(player, inputDisplayMachine, scan);
 
-				// Open Boxes
-				displayBoxesMenu(player, inputDisplayMachine, scan);
-
-			}
-
-			else if (choice == 0)
-			{
-
-				break;
-
-			}
+			else if (choice == 0) break;
 
 		}
 
@@ -287,7 +365,7 @@ class PokeMelon
 
 			String border = "=========================================================";
 			System.out.println(border);
-			System.out.println("           📦 BOXES 📦");
+			System.out.println("\t\t\t📦 BOXES 📦");
 			System.out.println(border);
 
 			System.out.println("\n  Your Boxes:\n");
@@ -295,17 +373,17 @@ class PokeMelon
 			Boxes boxes = player.getBoxes();
 			ArrayList<Pokemon> boxesList = boxes.getBoxes();
 
-			if (boxesList.size() == 0)
-			{
-				System.out.println("  Your boxes are empty!");
-			}
+			if (boxesList.size() == 0) System.out.println("  Your boxes are empty!");
+
 			else
 			{
+
 				for (int i = 0; i < boxesList.size(); i++)
 				{
 					System.out.print("  " + (i + 1) + ". ");
 					boxesList.get(i).displayGeneral();
 				}
+
 			}
 
 			System.out.println("\n  [1] Move Pokemon to Party");
@@ -314,10 +392,9 @@ class PokeMelon
 			System.out.println(border);
 			System.out.print("> ");
 
-			choice = scan.nextInt();
-			scan.nextLine();
+			choice = parseInt(scan.nextLine());
 
-			if (choice == 1)
+			if (choice == 1) // Move Pokemon from Boxes to Party
 			{
 
 				// Move from boxes to party
@@ -326,71 +403,79 @@ class PokeMelon
 					System.out.println("  No Pokemon in boxes!");
 					waitForEnter(scan);
 				}
+
 				else if (player.getParty().isFull())
 				{
 					System.out.println("  Your party is full!");
 					waitForEnter(scan);
 				}
+
 				else
 				{
+
 					System.out.print("  Select Pokemon ID (1-" + boxesList.size() + "): ");
-					int pokemonId = scan.nextInt();
-					scan.nextLine();
+					int pokemonId = parseInt(scan.nextLine());
 
 					if (pokemonId > 0 && pokemonId <= boxesList.size())
 					{
+
 						Pokemon p = boxesList.get(pokemonId - 1);
 						player.getParty().addPokemon(p);
 						boxes.removePokemon(p);
 						System.out.println("  " + p.getName() + " has been moved to your party!");
 						waitForEnter(scan);
+
 					}
+
 				}
 
 			}
 
-			else if (choice == 2)
+			else if (choice == 2) // Move from party to boxes
 			{
 
-				// Move from party to boxes
+				// if party is empty => display message
 				if (player.getParty().getSize() == 0)
 				{
 					System.out.println("  Your party is empty!");
 					waitForEnter(scan);
 				}
+
+				// else => do the task
 				else
 				{
+
 					System.out.print("  Select Pokemon (1-" + player.getParty().getSize() + "): ");
-					int pokemonId = scan.nextInt();
-					scan.nextLine();
+					int pokemonId = parseInt(scan.nextLine());
 
 					if (pokemonId > 0 && pokemonId <= player.getParty().getSize())
 					{
+
 						Pokemon p = player.getParty().getPokemon(pokemonId - 1);
+
 						if (p != null)
 						{
+
 							boxes.addPokemon(p);
 							player.getParty().removePokemon(pokemonId - 1);
 							System.out.println("  " + p.getName() + " has been stored in your boxes!");
 							waitForEnter(scan);
+
 						}
+
 					}
+
 				}
 
 			}
 
-			else if (choice == 0)
-			{
-
-				break;
-
-			}
+			else if (choice == 0) break;
 
 		}
 
 	}
 
-
+	
 	// -------------------- Option 5: Manage Party -------------------- //
 
 
@@ -406,7 +491,7 @@ class PokeMelon
 
 			String border = "=========================================================";
 			System.out.println(border);
-			System.out.println("           🐾 MANAGE PARTY 🐾");
+			System.out.println("\t\t  🐾 MANAGE PARTY 🐾");
 			System.out.println(border);
 
 			System.out.println("\n  Your Party:\n");
@@ -418,22 +503,22 @@ class PokeMelon
 			System.out.println(border);
 			System.out.print("> ");
 
-			choice = scan.nextInt();
-			scan.nextLine();
+			choice = parseInt(scan.nextLine());
 
-			if (choice == 1)
+			if (choice == 1) // Display full detail of pokemon
 			{
 
 				// view Pokemon details
 				System.out.print("\n  Select Pokemon (1-" + player.getParty().getSize() + "): ");
-				int pokemonId = scan.nextInt();
-				scan.nextLine();
+				int pokemonId = parseInt(scan.nextLine());
 
 				if (pokemonId > 0 && pokemonId <= player.getParty().getSize())
 				{
+
 					Pokemon p = player.getParty().getPokemon(pokemonId - 1);
 					if (p != null)
 					{
+
 						inputDisplayMachine.clearScreen();
 						String detailBorder = "==========================================================";
 						System.out.println(detailBorder);
@@ -449,45 +534,45 @@ class PokeMelon
 						System.out.println();
 						System.out.println(detailBorder);
 						waitForEnter(scan);
+
 					}
+
 				}
 
 			}
 
-			else if (choice == 2)
+			else if (choice == 2) // Move pokemon
 			{
 
 				// Move Pokemon in party
 				System.out.print("\n  Select Pokemon to move (1-" + player.getParty().getSize() + "): ");
-				int fromId = scan.nextInt();
-				scan.nextLine();
+				int fromId = parseInt(scan.nextLine());
 
 				if (fromId > 0 && fromId <= player.getParty().getSize()) // only move when fromId is valid
 				{
+
 					System.out.print("  Select new position (1-6): ");
-					int toId = scan.nextInt();
-					scan.nextLine();
+					int toId = parseInt(scan.nextLine());
 
 					if (toId > 0 && toId <= 6)
 					{
+
 						Pokemon[] party = player.getParty().getParty();
 						Pokemon temp = party[fromId - 1];
 						party[fromId - 1] = party[toId - 1];
 						party[toId - 1] = temp;
 
 						System.out.println("  Pokemon moved successfully!");
+						player.getParty().pileUp (); // pile up the party to the front
 						waitForEnter(scan);
+
 					}
+
 				}
 
 			}
 
-			else if (choice == 0)
-			{
-
-				break;
-
-			}
+			else if (choice == 0) break;
 
 		}
 
@@ -514,12 +599,14 @@ class PokeMelon
 			System.out.println("\n  Your Active Pokemon:\n");
 			if (player.getParty().getSize() > 0)
 			{
+
 				Pokemon activePokemon = player.getParty().getPokemon(0);
 				if (activePokemon != null)
 				{
 					System.out.print("  ");
 					activePokemon.displayGeneral();
 				}
+
 			}
 
 			System.out.println(border);
@@ -563,25 +650,22 @@ class PokeMelon
 			System.out.println(border);
 			System.out.print("> ");
 
-			choice = scan.nextInt();
-			scan.nextLine();
+			choice = parseInt(scan.nextLine());
 
 			if (choice > 0 && choice <= 15)
 			{
 
 				if (player.getInventory().getItemAmount(choice) > 0)
 				{
-					System.out.print("\n  Select Pokemon (1-" + player.getParty().getSize() + ") or 0 to cancel: ");
-					int pokemonId = scan.nextInt();
-					scan.nextLine();
 
-					if (pokemonId == 0)
-					{
-						// Do nothing, go back to item selection
-						continue;
-					}
+					System.out.print("\n  Select Pokemon (1-" + player.getParty().getSize() + ") or 0 to cancel: ");
+					int pokemonId = parseInt(scan.nextLine());
+
+					if (pokemonId == 0) continue; // Do nothing, go back to item selection
+
 					else if (pokemonId > 0 && pokemonId <= player.getParty().getSize())
 					{
+
 						Pokemon p = player.getParty().getPokemon(pokemonId - 1);
 						if (p != null)
 						{
@@ -590,8 +674,11 @@ class PokeMelon
 							System.out.println("\n  " + p.getName() + " was healed!");
 							waitForEnter(scan);
 						}
+
 					}
+
 				}
+
 				else
 				{
 					System.out.println("\n  You don't have this item!");
@@ -600,15 +687,20 @@ class PokeMelon
 
 			}
 
-			else if (choice == 0)
-			{
-
-				break;
-
-			}
+			else if (choice == 0) break;
 
 		}
 
+	}
+
+
+	// -------------------- Option 7: Save File -------------------- //
+
+
+	public static void saveGame (FileManager fileManager, Player player, Scanner scan)
+	{
+		fileManager.saveGame(player);
+		waitForEnter(scan);
 	}
 
 
@@ -623,7 +715,6 @@ class PokeMelon
 		*/
 
 		System.out.print ("Enter giftcode: ");
-		scan.nextLine();
 		String giftcode = scan.nextLine();
 
 		if (giftcode.equals("GOITANTHUVIP"))
@@ -635,8 +726,9 @@ class PokeMelon
 			// add money
 			player.addMoney(100000);
 
-			inputDisplayMachine.clearScreen();
+			inputDisplayMachine.displayMainMenu(player);
 			System.out.println("You've received x20 per each item & 100,000 PokeCoin🪙");
+			waitForEnter(scan);
 
 		}
 
