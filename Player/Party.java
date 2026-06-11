@@ -100,10 +100,10 @@ public class Party {
         {
             for (int j = 0; j < 6 - i; j++)
             {
-                if (party[i] == null)
+                if (party[j] == null)
                 {
-                    party[i] = party[i + 1];
-                    party[i + 1] = null; 
+                    party[j] = party[j + 1];
+                    party[j + 1] = null; 
                 }
             }
         }
@@ -124,7 +124,7 @@ public class Party {
     {
 
         // invalid index (index < 0 || index >= current size)
-        if (0 < inputIndex || inputIndex >= size) return;
+        if (inputIndex < 0 || inputIndex >= size) return;
 
         this.party[inputIndex] = null; // remove pokemon
         --this.size;
