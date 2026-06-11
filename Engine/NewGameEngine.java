@@ -2,6 +2,7 @@ package Engine;
 
 import java.util.*;
 
+import Map.Area;
 import Player.Player;
 import Pokemon.*;
 
@@ -23,23 +24,23 @@ public class NewGameEngine
     public Player startNewJourney() {
         displayMachine.clearScreen();
         
-        System.out.println("=========================================================");
-        System.out.println(" 🌳 Hello there! Welcome to the world of POKEMON!");
-        System.out.println(" My name is PROFESSOR MELON.");
         System.out.println("=========================================================\n");
+        System.out.println(" 🌳 Hello there! Welcome to the world of POKEMELON!");
+        System.out.println(" 👋 My name is 👨🥼🔬 PROFESSOR MELON 🍈");
+        System.out.println("\n=========================================================\n");
         
         // 1. Get the Player's Name
-        System.out.print(" First, tell me... what is your name?\n > ");
+        System.out.print(" First, tell me... what shall I call you?\n > ");
         String playerName = scan.nextLine().trim();
         
         if (playerName.isEmpty()) {
-            playerName = "Watermelon"; // Default name
+            playerName = "Watermelon 🍉"; // Default name
         }
         
         Player newPlayer = new Player(playerName);
         
-        System.out.println("\n Ah, right! " + newPlayer.getName().toUpperCase() + "! Your very own legend is about to unfold!");
-        System.out.println(" Press ENTER to continue...");
+        System.out.println("\n Ah, right! " + newPlayer.getName().toUpperCase() + "! Your very own legend is about to unfold! 🐉\n");
+        System.out.print(" Press ENTER to continue...");
         scan.nextLine(); 
         
         // 2. Choose the Starter Pokemon
@@ -51,9 +52,14 @@ public class NewGameEngine
     }
 
 
-    private void chooseStarterPokemon(Player player) {
-        while (true) {
+    private void chooseStarterPokemon(Player player)
+    {
+
+        while (true)
+        {
+
             displayMachine.clearScreen();
+
             System.out.println("=========================================================");
             System.out.println(" 🎁 Choose your first partner Pokémon!");
             System.out.println("=========================================================\n");
@@ -73,9 +79,14 @@ public class NewGameEngine
             
             // after picking a starter pokemon successfully => add new pokemon into the party
             player.getParty().addPokemon(starter);
+            player.determineHighestLevel();
+
+            // new player's area
+            player.setCurrentArea(new Area("Kiwi Village", 8));
             
             System.out.println("\n 🎉 You received " + starter.getName().toUpperCase() + "!");
-            System.out.println(" Press ENTER to begin your journey...");
+            System.out.println(" Your epic journey will start in Kiwi Village 🏡\n");
+            System.out.print(" Press ENTER to begin your journey...");
             scan.nextLine();
             
             break; // Exit the loop completely
