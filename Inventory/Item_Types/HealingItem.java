@@ -1,6 +1,9 @@
 package Inventory.Item_Types;
 
 import Inventory.*;
+
+import java.util.Scanner;
+
 import Engine.Battle;
 import Pokemon.*;
 
@@ -54,20 +57,22 @@ public class HealingItem extends Item
 
     // using item
     @Override
-    public boolean use (Battle battle, Pokemon playerPokemon)
+    public boolean use (Battle battle, Pokemon playerPokemon, Scanner scan)
     {
 
         // if pokemon is fainted, cannot use healing item on it
         if (playerPokemon.getHp() == 0)
         {
-            System.out.println ("Cannot use " + super.getName() + " on " + playerPokemon.getName() + " because it is fainted!");
+            System.out.println ("\n⚠️ Cannot use " + super.getName() + " on " + playerPokemon.getName() + " because it is fainted!");
+            waitForEnter(scan);
             return false;
         }
 
         // if pokemon's hp is fulled, cannot use healing item on it
-        if (playerPokemon.getHp() == playerPokemon.getMaxHp())
+        if (playerPokemon.getHp() >= playerPokemon.getMaxHp())
         {
-            System.out.println ("Cannot use " + super.getName() + " on " + playerPokemon.getName() + " because its HP is full!");
+            System.out.println ("\n⚠️ Cannot use " + super.getName() + " on " + playerPokemon.getName() + " because its HP is full!");
+            waitForEnter(scan);
             return false;
         }
 
@@ -75,7 +80,8 @@ public class HealingItem extends Item
         playerPokemon.addHp (Math.min(playerPokemon.getHp() + this.healAmount, playerPokemon.getMaxHp()));
         int hpAfterHeal = playerPokemon.getHp();
 
-        System.out.println ("Used " + super.getName() + " on " + playerPokemon.getName() + " and healed " + (hpAfterHeal - hpBeforeHeal) + " HP!");
+        System.out.println ("\nUsed " + super.getName() + " on " + playerPokemon.getName() + " and healed " + (hpAfterHeal - hpBeforeHeal) + " HP!");
+        waitForEnter(scan);
         return true;
 
     }
