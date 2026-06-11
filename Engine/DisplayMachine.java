@@ -64,11 +64,13 @@ public class DisplayMachine {
         System.out.println("\n");
 
         Pokemon tmpPlayerPokemon = inpuBattle.getPlayerPokemon();
+
         if (tmpPlayerPokemon != null)
         {
             System.out.print(" ");
             tmpPlayerPokemon.displayGeneral();
         }
+
         else
         {
             System.out.println("Your active Pokémon is fainted or unavailable.");
@@ -86,7 +88,10 @@ public class DisplayMachine {
         clearScreen();
         displayBattleHeader(inpuBattle);
 
-        System.out.println("\n  What will " + inpuBattle.getPlayerPokemon().getName().toUpperCase() + " do?\n");
+        // check if player's pokemon is null or not => To display appropriate message
+        if (inpuBattle.getPlayerPokemon() != null) System.out.println("\n  What will " + inpuBattle.getPlayerPokemon().getName().toUpperCase() + " do?\n");
+        else System.out.println("\n  What will you do?\n");
+
         System.out.println("  [1] 🔪FIGHT                      [2] 🎒BAG");
         System.out.println("  [3] 🐾POKEMON                    [4] 🏃RUN\n");
         System.out.println("=========================================================");
