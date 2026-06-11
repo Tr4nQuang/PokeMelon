@@ -25,7 +25,6 @@ public class Battle {
     // battle system
     private TypeChart typeChart = new TypeChart();
     private Itemdex itemdex = new Itemdex();
-    private Scanner scan = new Scanner(System.in);
     private DisplayMachine displayMachine = new DisplayMachine();
 
     private int turn;
@@ -59,7 +58,7 @@ public class Battle {
 
         // assign battle fields
         this.turn = 1;        
-        if (this.playerPokemon.getSpd() >= this.enemyPokemon.getSpd()) this.isPlayerFirst = true; // assign who move first
+        if (!(this.playerPokemon == null || this.enemyPokemon == null) && this.playerPokemon.getSpd() >= this.enemyPokemon.getSpd()) this.isPlayerFirst = true; // assign who move first
         this.isWildPokemon = isWild;
     }
 
@@ -267,6 +266,38 @@ public class Battle {
 
     }
 
+
+    // -------------------- HELPERS -------------------- //
+
+
+    public int parseInt (String inpuString)
+    {
+
+        int ans = 0;
+        int coef = 1;
+
+        for (int i = 0; i < inpuString.length(); i++)
+        {
+
+            char c = inpuString.charAt(i);
+
+            if (i == 0 && c == '-') coef *= -1;
+
+            else if ('0' <= c && c <= '9') ans = ans * 10 + (c - '0');
+
+            else
+            {
+                System.out.println ("parseInt Error: this string does not contain a valid int");
+                return -1;
+            }
+
+        }
+
+        return ans * coef;
+
+    }
+
+
     // -------------------- OPERATIONS -------------------- //
 
 
@@ -277,11 +308,11 @@ public class Battle {
     3. Pokemon (changing in-combat pokemon)
     4. Run
     */
-    public String fightOption ()
+    public String fightOption (Scanner scan)
     {
 
         // variables
-        int choice = 0;
+        int choice = -1;
         Move move = new Move();
 
         while (true) // only finish the method once player picks a valid move
@@ -289,7 +320,7 @@ public class Battle {
 
             //  display the Menu & asks player to pick a move
             displayMachine.displayFightingMenu(this);
-            choice = this.scan.nextInt();
+            choice = parseInt(scan.nextLine());
 
             // choice == 0 => exit the fighting option
             if (choice == 0) return "";
@@ -337,11 +368,11 @@ public class Battle {
         
     }
 
-    public void bagOption ()
+    public void bagOption (Scanner scan)
     {
 
         // variables
-        int choice = 0;
+        int choice = -1;
         Inventory tmpInventory = this.player.getInventory();
 
 
@@ -350,12 +381,13 @@ public class Battle {
 
             // display the bag & asks player to pick an item
             displayMachine.displayInventoryMenu(this);
-            choice = this.scan.nextInt();
-
+            choice = parseInt(scan.nextLine());
 
 
             // if choice == 0 => Exit the bag option
             if (choice == 0) return;
+
+            if (choice < 0 || choice > 15) continue;
 
             // category = 1 => Healing item && Only use when amount > 0
             if (tmpInventory.getItem(choice).getCategory() == 1 && tmpInventory.getItemAmount(choice) > 0)
@@ -367,19 +399,21 @@ public class Battle {
                 {
 
                     this.player.getParty().display(); // display the party of player
-                    System.out.print ("Choose a pokemon to use item on (Enter 0 to Exit): ");
-                    int choosePokemon = scan.nextInt();
+                    System.out.print ("\nChoose a pokemon to use item on (Enter 0 to Exit): ");
+                    int choosePokemon = parseInt(scan.nextLine());
 
                     // press 0 to go back (exit the while loop) & go back to the choosing item menu
                     if (choosePokemon == 0) break;
 
                     // if choosePokemon is valid (1->6) && pokemon at index [choosePokemon] != null && the item can be used successfully => decrease amount of item by 1 & go to next turn & end the method
-                    else if (1 <= choosePokemon && choosePokemon <= 6 && (tmp = this.player.getParty().getPokemon(choosePokemon - 1)) != null && tmpInventory.getItem(choice).use(this, tmp))
+                    else if (1 <= choosePokemon && choosePokemon <= 6 && (tmp = this.player.getParty().getPokemon(choosePokemon - 1)) != null && tmpInventory.getItem(choice).use(this, tmp, scan))
                     {
                         this.player.getInventory().useItem(choice);
                         nextTurn();
                         return;
                     }
+
+                    displayMachine.displayInventoryMenu(this);
 
                 }
 
@@ -395,19 +429,21 @@ public class Battle {
                 {
 
                     this.player.getParty().display(); // display the party of player
-                    System.out.print ("Choose a pokemon to use item on (Enter 0 to Exit): ");
-                    int choosePokemon = scan.nextInt();
+                    System.out.print ("\nChoose a pokemon to use item on (Enter 0 to Exit): ");
+                    int choosePokemon = parseInt(scan.nextLine());
 
                     // press 0 to go back (exit the while loop) & go back to the choosing item menu
                     if (choosePokemon == 0) break;
 
                     // if choosePokemon is valid (1->6) && pokemon at index [choosePokemon] != null && the item can be used successfully => decrease amount of item by 1 & go to next turn & end the method
-                    else if (1 <= choosePokemon && choosePokemon <= 6 && (tmp = this.player.getParty().getPokemon(choosePokemon - 1)) != null && tmpInventory.getItem(choice).use(this, tmp))
+                    else if (1 <= choosePokemon && choosePokemon <= 6 && (tmp = this.player.getParty().getPokemon(choosePokemon - 1)) != null && tmpInventory.getItem(choice).use(this, tmp, scan))
                     {
                         this.player.getInventory().useItem(choice);
                         nextTurn();
                         return;
                     }
+
+                    displayMachine.displayInventoryMenu(this);
 
                 }
 
@@ -418,7 +454,7 @@ public class Battle {
             {
 
                 // if pokemon at index [choosePokemon] != null && the item can be used successfully => decrease amount of item by 1 & go to next turn & end the method
-                if (tmpInventory.getItem(choice).use(this, this.enemyPokemon))
+                if (tmpInventory.getItem(choice).use(this, this.enemyPokemon, scan))
                 {
                     this.player.getInventory().useItem(choice);
                     nextTurn();
@@ -431,32 +467,27 @@ public class Battle {
             if (tmpInventory.getItem(choice).getCategory() == 4 && tmpInventory.getItemAmount(choice) > 0)
             {
 
-                if (this.checkBattleStatus()) // if battle is happening => cannot use exp items
-                {
-                    System.out.println ("Cannot use " + tmpInventory.getItem(choice).getName() + " during the battle!");
-                    continue;
-                }
-
-                // if battle ISN'T happening => can use
                 Pokemon tmp = null; // pick a pokemon from the party
 
                 while (true) // loop until player enter a valid input
                 {
 
                     this.player.getParty().display(); // display the party of player
-                    System.out.print ("Choose a pokemon to use item on (Enter 0 to Exit): ");
-                    int choosePokemon = scan.nextInt();
+                    System.out.print ("\nChoose a pokemon to use item on (Enter 0 to Exit): ");
+                    int choosePokemon = parseInt(scan.nextLine());
 
                     // press 0 to go back (exit the while loop) & go back to the choosing item menu
                     if (choosePokemon == 0) break;
 
                     // if choosePokemon is valid (1->6) && pokemon at index [choosePokemon] != null && the item can be used successfully => decrease amount of item by 1 & go to next turn & end the method
-                    else if (1 <= choosePokemon && choosePokemon <= 6 && (tmp = this.player.getParty().getPokemon(choosePokemon - 1)) != null && tmpInventory.getItem(choice).use(this, tmp))
+                    else if (1 <= choosePokemon && choosePokemon <= 6 && (tmp = this.player.getParty().getPokemon(choosePokemon - 1)) != null && tmpInventory.getItem(choice).use(this, tmp, scan))
                     {
                         this.player.getInventory().useItem(choice);
                         nextTurn();
                         return;
                     }
+
+                    displayMachine.displayInventoryMenu(this);
 
                 }
 
@@ -466,7 +497,7 @@ public class Battle {
 
     }
 
-    public void pokemonOption ()
+    public void pokemonOption (Scanner scan)
     {
 
         Pokemon tmp = null; // pick a pokemon from the party
@@ -475,7 +506,7 @@ public class Battle {
         {
 
             displayMachine.displayChangingPokemonMenu(this);
-            int choosePokemon = scan.nextInt();
+            int choosePokemon = parseInt(scan.nextLine());
 
             // press 0 to go back (exit the while loop) & go back to the choosing item menu
             if (choosePokemon == 0) return;
