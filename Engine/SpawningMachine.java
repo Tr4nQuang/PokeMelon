@@ -383,7 +383,7 @@ public class SpawningMachine {
     }
 
     // method for spawning a pokemon in the area
-    public Pokemon spawnPokemon (Player player, Area area)
+    public Pokemon spawnPokemon (Player player)
     {
 
         // created needed objects
@@ -412,7 +412,9 @@ public class SpawningMachine {
         */
 
         // validate area type and fallback if it is invalid
+        Area area = player.getCurrentArea();
         int areaType = area.getType();
+        
         if (areaType < 1 || areaType > 8)
         {
             System.out.printf("Warning: invalid area type %d for %s. Defaulting to City biome.%n", areaType, area.getName());
@@ -567,8 +569,12 @@ public class SpawningMachine {
 
         }
 
+        int highestLevel = player.getHighestLevel();
+
         // spawn a pokemon
-        return new Pokemon(pokedex, pokemon.getId(), ran.nextInt(player.getHighestLevel()) + 1); // random level from 1 -> highest level of player's pokemon (max is 100)
+        // random level from (highestLevel - 25) -> (highestLevel) of player's pokemon (max is 100)
+        // get max of (1, highestLevel - 25) => to avoid (highestLevel - 25) < 0
+        return new Pokemon(pokedex, pokemon.getId(), ran.nextInt(highestLevel - Math.max(1, (highestLevel - 25)) + 1) + Math.max(1, (highestLevel - 25)));
 
     }
 
