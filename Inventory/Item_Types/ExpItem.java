@@ -75,7 +75,7 @@ public class ExpItem extends Item
         }
 
         int expBefore = playerPokemon.getExp();
-        playerPokemon.addExp(this.expAmount);
+        playerPokemon.addExp(this.expAmount, scan);
         int expAfter = playerPokemon.getExp();
 
         System.out.println ("\nUsed " + super.getName() + " on " + playerPokemon.getName() + " and gained " + (expAfter - expBefore) + " EXP!");
