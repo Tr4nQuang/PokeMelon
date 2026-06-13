@@ -1,7 +1,7 @@
 package Pokemon;
 import java.util.*;
 
-import Engine.SortingMachine;
+import Engine.*;
 import Move.*;
 
 
@@ -11,6 +11,7 @@ public class Pokemon {
 
     // objects
     SortingMachine sortingMachine = new SortingMachine();
+    DisplayMachine displayMachine = new DisplayMachine();
 
     // general information
     private int id;         // e.g, "001" for Bulbasaur
@@ -318,10 +319,10 @@ public class Pokemon {
         calculateStats (new Pokedex()); // calculate new stats for pokemon after setting new level for it
     }
 
-    public void addExp (int inputExp)
+    public void addExp (int inputExp, Scanner scan)
     {
         this.exp += inputExp;
-        levelUp (new Pokedex()); // after adding exp, check for level up and evolve up
+        levelUp (new Pokedex(), scan); // after adding exp, check for level up and evolve up
     }
 
     public void addHp (int inputHp)
@@ -450,6 +451,12 @@ public class Pokemon {
         displayHPBar();
     }
 
+    private void waitForEnter(Scanner scan)
+	{
+		System.out.print("\nPress Enter to continue...");
+		scan.nextLine();
+	}
+
     @Override
     public String toString ()
     {
@@ -568,28 +575,39 @@ public class Pokemon {
     }
 
     // earns exp after defeat a pokemon
-    public void takeExp (Pokemon inputEnemy)
+    public void takeExp (Battle inputBattle, Pokemon inputEnemy, Scanner scan)
     {
 
         // if level is not max yet => Can earn EXP
         if (this.level < 100)
         {
-            System.out.printf ("%s gained %d EXP\n", this.name.toUpperCase(), inputEnemy.getBaseExp ());
-            this.exp += inputEnemy.getBaseExp () * inputEnemy.getLevel () / 7;
+            int earnedExp = (int) inputEnemy.getBaseExp () * inputEnemy.getLevel () / 7;
+
+            this.displayMachine.displayFightingMenu(inputBattle);
+            System.out.printf ("\n%s gained %d EXP\n", this.name.toUpperCase(), earnedExp);
+            this.waitForEnter(scan);
+
+            // earn exp
+            this.exp += earnedExp;
+
+            // check for level up
+            this.levelUp(new Pokedex(), scan);
         }
 
     }
 
     // evolve pokemon if possible
-    public void evolveUp (Pokedex pokedex)
+    public void evolveUp (Pokedex pokedex, Scanner scan)
     {
 
         // if pokemon has next evolution & it satisfies the required level => Pokemon will evolute
         if (this.level >= this.evolutionLevel)
         {
+
             // display messages
             System.out.printf ("What? %s is evolving!\n", this.name.toUpperCase());
             System.out.println ("...");
+            this.waitForEnter(scan);
 
             // -------------------- Operate the Evolution -------------------- //
 
@@ -620,6 +638,8 @@ public class Pokemon {
 
             // displat congratulation message
             System.out.printf ("Congratulations! Your %s evolved into %s!\n", pokedex.getPokemon(this.id - 1).getName().toUpperCase(), this.name.toUpperCase());
+            this.waitForEnter(scan);
+
         }
 
     }
@@ -637,7 +657,7 @@ public class Pokemon {
     }
 
     // level up pokemon if possible (include checkLevelUp () && evolveUp (Pokedex pokedex))
-    public void levelUp (Pokedex pokedex)
+    public void levelUp (Pokedex pokedex, Scanner scan)
     {
 
         // if pokemon can level up
@@ -651,9 +671,10 @@ public class Pokemon {
             }
 
             // then, check for evolution and display message
-            evolveUp(pokedex); // after level up, check for the evolution
-            System.out.printf ("%s grew to level %d!\n", this.name.toUpperCase(), this.level); // display level up message
+            evolveUp(pokedex, scan); // after level up, check for the evolution
+            System.out.printf ("\n%s grew to level %d!\n\n", this.name.toUpperCase(), this.level); // display level up message
             displayStats(); // display new stats
+            this.waitForEnter(scan);
         }
         
     }
