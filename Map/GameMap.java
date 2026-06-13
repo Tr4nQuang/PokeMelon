@@ -19,116 +19,96 @@ public class GameMap
     // -------------------- CONSTRUCTORS -------------------- //
     
 
+    /*
     public GameMap ()
     {
         this.map.put ("null", null);
     }
+    */
     
-    // constructor with array of map files as a parameter
-    public GameMap (File[] files)
+    // constructor with a single map database file as input
+    public GameMap ()
     {
-        
-        // add the null area into the map (this area is treated as the border for the outter areas)
-        this.map.put ("null", null);
 
-        // fulfill the hashmap with new areas first (name & map)
-        for (int i = 0; i < files.length; i++)
-        {
-            
-            if (!files[i].exists ())
-            {
-                System.out.println ("File #" + (i) + " does not exist!!!");
-                return;
-            }
-            
-            
-            // read all the name and map of files
-            try
-            {
-                
-                // create a buffered for reading input file   
-                BufferedReader reader = new BufferedReader (new FileReader (files[i]));
-                
-                // create new area (using name)
-                // logic: name of area is written in the 1st line of file, 2nd line is type of area
-                // therefore, only read the 1st & 2nd line of each file to create new area
-                String areaName = reader.readLine ();
-                int areaType = parseInt(reader.readLine());
-                Area area = new Area (areaName, areaType);
-                
-                // get map from the input file (map will be written on the next 30 lines)
-                String tmp;
+        File file = new File("Data_Base_files/map_dataBase.txt");
 
-                for (int j = 0; j < 30; j++) // each map has 30 rows / lines
-                {
-                    
-                    tmp = reader.readLine ();
-                    
-                    for (int k = 0; k < tmp.length (); k++) area.map[j][k] = tmp.charAt (k);
-                    
-                }
-                
-                // put the new area into the hashmap
-                this.map.put (area.getName(), area);
-                
-                // close the reader
-                reader.close ();
-                
-            }
-            
-            // catch if there is any IO Exception
-            catch (IOException e)
-            {
-                e.printStackTrace ();
-            }
-            
-        }
-        
-        
-        // connects areas together
-        for (int i = 0; i < files.length; i++)
+        // add the null area into the map (this area is treated as the border for the outer areas)
+        this.map.put("null", null);
+
+        if (!file.exists())
         {
-            
-            // do not need to check the existence of files again
-            
-            // read the connections between areas
-            try
-            {
-                
-                // create a buffered for reading input file
-                BufferedReader reader = new BufferedReader (new FileReader (files[i]));
-                
-                // get the area that the current file represents (1st line always contains "Area Name", then use hashmap to get its Node Area)
-                Area area = this.map.get (reader.readLine ());
-                
-                // skip the contents that were already read (From line 2 -> line 31 || 1 -> 30)
-                for (int j = 1; j <= 30; j++) reader.readLine ();
-                
-                // read the connections (North - South - West - East)
-                for (int j = 0; j < 4; j++)
-                {
-                    
-                    // then, base on whether i = 0 -> 3 (AKA: North -> East) to assgin the area
-                    if (j == 0) area.north = this.map.get (reader.readLine ());
-                    if (j == 1) area.south = this.map.get (reader.readLine ());
-                    if (j == 2) area.west = this.map.get (reader.readLine ());
-                    if (j == 3) area.east = this.map.get (reader.readLine ());
-                    
-                }
-                
-                // close the reader
-                reader.close ();
-                
-            }
-            
-            // catch if there is any IO Exception
-            catch (IOException e)
-            {
-                e.printStackTrace ();
-            }
-            
+            System.out.println("map_dataBase.txt does not exist!");
+            return;
         }
+
+        ArrayList<String[]> records = new ArrayList<>();
+
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file)))
+        {
+
+            String line;
+
+            while ((line = reader.readLine()) != null)
+            {
+
+                line = line.trim(); // remove all extra space at the front & end of string
+
+                if (line.isEmpty()) continue;
+
+                String[] parts = line.split(","); // split the line into multiple string (using "," to split)
+
+                if (parts.length != 6) // a standard input line should include 6 piece of string
+                {
+                    System.out.println("Invalid map_dataBase line: " + line);
+                    continue;
+                }
+
+                String areaName = parts[0].trim();
+                int areaType = parseInt(parts[1].trim());
+                Area area = new Area(areaName, areaType);
+                this.map.put(areaName, area);
+                records.add(parts);
+
+            }
+        }
+
+        // catch exception
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+
+        // do the connection
+        for (String[] parts : records)
+        {
+
+            Area area = this.map.get(parts[0]);
+
+            if (area == null) continue; // if area is null => skip
+
+            area.north = getArea(parts[2].trim());
+            area.south = getArea(parts[3].trim());
+            area.west = getArea(parts[4].trim());
+            area.east = getArea(parts[5].trim());
+
+        }
+
+    }
+
+
+    // -------------------- HELPERS -------------------- //
+
+
+    // is used to get area by entering their name
+    public Area getArea (String name)
+    {
+        // if the text file says there is no exit ("none") => return null
+        if (name.equals("none") || name.equals("null")) return null;
         
+        // otherwise, just grab the Area directly from the map & return it
+        return this.map.get(name);
     }
 
 
