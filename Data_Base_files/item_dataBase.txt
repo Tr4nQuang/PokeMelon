@@ -1,15 +1,15 @@
-1 🩹Potion' Heals 20 HP' 1
-2 💊Super Potion' Heals 50 HP' 1
-3 🧪Hyper Potion' Heals 200 HP' 1
-4 ⚗️Max Potion' Restores HP completely' 1
-5 ⭐️Revive' Revives a fainted Pokémon and restores half of its maximum HP' 2
-6 🌟Max Revive' Revives a fainted Pokémon and restores its HP completely' 2
-7 🔴Poké Ball' 1.0x Catch Rate' 3
-8 🔵Great Ball' 1.5x Catch Rate' 3
-9 🟡Ultra Ball' 2.0x Catch Rate' 3
-10 🟣Master Ball' Guaranteed Catch' 3
-11 🍬Exp Candy XS' Gives 100 EXP' 4
-12 🍭Exp Candy S' Gives 800 EXP' 4
-13 🍫Exp Candy M' Gives 3000 EXP' 4
-14 🍪Exp Candy L' Gives 10000 EXP' 4
-15 🍩Exp Candy XL' Gives 30000 EXP' 4
+1 🩹 Potion' Heals 20 HP' 1
+2 💊 Super Potion' Heals 50 HP' 1
+3 🧪 Hyper Potion' Heals 200 HP' 1
+4 ⚗️ Max Potion' Restores HP completely' 1
+5 ⭐️ Revive' Revives a fainted Pokémon and restores half of its maximum HP' 2
+6 🌟 Max Revive' Revives a fainted Pokémon and restores its HP completely' 2
+7 🔴 Poké Ball' 1.0x Catch Rate' 3
+8 🔵 Great Ball' 1.5x Catch Rate' 3
+9 🟡 Ultra Ball' 2.0x Catch Rate' 3
+10 🟣 Master Ball' Guaranteed Catch' 3
+11 🍬 Exp Candy XS' Gives 100 EXP' 4
+12 🍭 Exp Candy S' Gives 800 EXP' 4
+13 🍫 Exp Candy M' Gives 3000 EXP' 4
+14 🍪 Exp Candy L' Gives 10000 EXP' 4
+15 🍩 Exp Candy XL' Gives 30000 EXP' 4
