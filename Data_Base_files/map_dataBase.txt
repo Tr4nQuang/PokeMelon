@@ -1,0 +1,9 @@
+🏡 Kiwi Village, 8, none, 🏙️ Fruit City, none, none
+🏙️ Fruit City, 1, 🏡 Kiwi Village, ⚓️ Watermelon Harbor, 🌲 Berry Forest, ⚡️ Power Plant
+⚓️ Watermelon Harbor, 2, 🏙️ Fruit City, 🌊 Coconut Ocean, none, none
+🌊 Coconut Ocean, 3, ⚓️ Watermelon Harbor, none, none, none
+🏔️ Persimmon Peak, 7, none, 🌲 Berry Forest, none, none
+🌲 Berry Forest, 8, 🏔️ Persimmon Peak, 🕳️ Shadow Cave, none, 🏙️ Fruit City
+🕳️ Shadow Cave, 4, 🌲 Dark Forest, none, none, none
+⚡️ Power Plant, 6, none, 🌋 Guava Volcano, 🏙️ Fruit City, none
+🌋 Guava Volcano, 5, ⚡️ Power Plant, none, none, none
