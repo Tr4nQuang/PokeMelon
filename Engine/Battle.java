@@ -143,13 +143,6 @@ public class Battle {
         this.turn++;
     }
 
-    // determine whether player or enemy move first
-    public void determineAttackOrder ()
-    {
-        if (playerPokemon.getSpd() >= enemyPokemon.getSpd()) isPlayerFirst = true;
-        else isPlayerFirst = false;
-    }
-
     // end the battle immediately & display the message
     public String endBattle ()
     {
@@ -235,8 +228,12 @@ public class Battle {
         // if after conisdering all the moves but the highestDamage = 0 => Run out of PP of all moves => Change to other pokemon & end turn
         if (highestDamage == 0)
         {
-            this.enemyPokemon = this.enemy.getLeadPokemon();
-            return String.format ("%s does not have any available moves\n", this.enemyPokemon.getName().toUpperCase());
+            String message = String.format ("%s does not have any available moves\n", this.enemyPokemon.getName().toUpperCase());
+
+            this.enemyPokemon.setHp(0); // make the current enemy pokemon faint
+            this.enemyPokemon = this.enemy.getLeadPokemon(); // then change to the next pokemon
+
+            return message;
         }
 
         // otherwise => decrease the currentPP of pokemon's used move by 1 & player's pokemon take damage
@@ -345,7 +342,11 @@ public class Battle {
                 String effectivenessMessage = this.typeChart.getEffectiveness(this.typeChart.translateType(typeOfMove), targetEnemy);
 
                 // enemy's pokemon take damage & check if enemy's pokemon is fainted or not. If pokemon is fainted => get another pokemon
-                if (targetEnemy.takeDamage(calculateDamage(this.playerPokemon, targetEnemy, move))) this.enemyPokemon = this.enemy.getLeadPokemon(); // get the next pokemon of enemy
+                if (targetEnemy.takeDamage(calculateDamage(this.playerPokemon, targetEnemy, move)))
+                {
+                    this.playerPokemon.takeExp(this, targetEnemy, scan);
+                    this.enemyPokemon = this.enemy.getLeadPokemon(); // get the next pokemon of enemy
+                }
 
                 // if next pokemon is null => end battle as enemy run out of pokemon
                 if (this.enemyPokemon == null)
