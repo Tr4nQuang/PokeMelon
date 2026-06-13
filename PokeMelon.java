@@ -48,10 +48,10 @@ class PokeMelon
 
 
 		// if save file does not exist => New Player
-		if (!fileManager.checkSaveFile()) player = newGameEngine.startNewJourney ();
+		if (!fileManager.checkSaveFile()) player = newGameEngine.startNewJourney(map);
 
 		// if save file exists => load player from save file
-		else player = fileManager.loadGame();
+		else player = fileManager.loadGame(map);
 
 
 		// start the game loop
@@ -76,7 +76,7 @@ class PokeMelon
 
 				// spawn the wild pokemon
 				ArrayList wildPokemon = new ArrayList<>();
-				wildPokemon.add (spawner.spawnPokemon(player));
+				wildPokemon.add (spawner.spawnPokemon(player, true));
 				Trainer wildTrainer = new Trainer("Wild", new Party(wildPokemon));
 				battle = new Battle(player, wildTrainer, true);
 
@@ -100,7 +100,9 @@ class PokeMelon
 
 			}
 
-			if (gameChoice == 3) pokemonCentre(player, displayMachine, scan);
+			if (gameChoice == 3) enterBuilding (player, displayMachine, scan);
+
+			if (gameChoice == 4) takeBus(player, displayMachine, map, scan);
 
 			if (gameChoice == 5) manageParty(player, displayMachine, scan);
 
@@ -201,14 +203,14 @@ class PokeMelon
 				{
 					System.out.println (combatMessage);
 					combatMessage = "";
+					waitForEnter(scan);
 				}
 				
-				waitForEnter(scan);
-
 			}
 
 			else // enemy's turn
 			{
+
 				combatMessage = inputBattle.enemyAttack(); // enemy do the attack
 
 				inputDisplayMachine.displayBattleMenu(inputBattle, false);
@@ -218,9 +220,8 @@ class PokeMelon
 				{
 					System.out.println (combatMessage);
 					combatMessage = "";
+					waitForEnter(scan);
 				}
-
-				waitForEnter(scan);
 				
 			}
 
@@ -246,40 +247,61 @@ class PokeMelon
 		{
 
 			// Use spawner to generate valid Pokemon
-			Pokemon npcPokemon = spawner.spawnPokemon(player);
+			Pokemon npcPokemon = spawner.spawnPokemon(player, false);
 			if (npcPokemon != null) npcParty.addPokemon(npcPokemon);
 
 		}
 
-		// Create NPC trainer
+		// create NPC
 		String[] npcNames = {"Kevin Apple", "Henry Pineapple", "Ray Tangerine", "Kerry Banana", "Kimberly Strawberry", "Officer Stanley Sugarcane", "Lord Dragon Fruit", "Shinnosuke Coconut", "Doraemon Blueberry"};
 		String npcName = npcNames[ran.nextInt(npcNames.length)];
 		Trainer npcTrainer = new Trainer(npcName, npcParty);
 
-		// Display NPC info
-		inputDisplayMachine.clearScreen();
-		String border = "==========================================================";
-		System.out.println(border);
-		System.out.println("                     ⚔️ TRAINER BATTLE ⚔️");
-		System.out.println(border);
-		System.out.println("\n  You encountered " + npcName.toUpperCase() + "!");
-		System.out.println("  " + npcName + " has " + npcParty.getSize() + " Pokemon!");
-		System.out.println("\n  " + npcName + "'s Party:");
-		npcParty.display();
-		System.out.println("\n" + border);
-		System.out.print("\nPress Enter to continue...");
+		// display NPC battle intro
+		inputDisplayMachine.displayTrainerBattleIntro(npcTrainer);
 		scan.nextLine();
 
-		// Create and start battle
+		// create and start the battle
 		Battle battle = new Battle(player, npcTrainer, false);
 		fighting(battle, inputDisplayMachine, scan);
 
 	}
 
 
-	// -------------------- Option 3: Pokemon Centre -------------------- //
+	// -------------------- Option 3: Enter Building -------------------- //
 
 
+	public static void enterBuilding(Player player, DisplayMachine inputDisplayMachine, Scanner scan)
+	{
+		int choice = -1;
+		
+		// take the name of the city the player is currently standing in
+		String currentArea = player.getCurrentArea().getName();
+
+		while (true)
+		{
+			
+			inputDisplayMachine.displayBuildingMenu (currentArea);
+			choice = parseInt(scan.nextLine());
+
+			// choice 1: pokemon centre
+			if (choice == 1) pokemonCentre(player, inputDisplayMachine, scan);
+
+			// choice 2: gym tower (only available in Fruit City)
+			else if (choice == 2 && currentArea.equalsIgnoreCase("🏙️ Fruit City")) 
+			{
+				// Trigger your Gym Tower logic here!
+				// enterElevator(player, gymTower, scan);
+				System.out.println("\n  You step into the massive Gym Tower...");
+				waitForEnter(scan);
+			}
+
+			else if (choice == 0) break;
+
+		}
+	}
+
+	// Building 1: Pokemon Centre (Available anywhere)
 	public static void pokemonCentre (Player player, DisplayMachine inputDisplayMachine, Scanner scan)
 	{
 
@@ -288,22 +310,7 @@ class PokeMelon
 		while (true)
 		{
 
-			inputDisplayMachine.clearScreen();
-
-			String border = "=========================================================";
-			System.out.println(border);
-			System.out.println("		  🏥 POKÉMON CENTRE 🏥");
-			System.out.println(border);
-
-			System.out.println("\n  Welcome to the Pokemon Centre!");
-			System.out.println("  How can we help you today?\n");
-
-			System.out.println("  [1] 💊 Heal My Pokemon");
-			System.out.println("  [2] 📦 Open Boxes");
-			System.out.println("  [0] ❌ Leave\n");
-			System.out.println(border);
-			System.out.print("> ");
-
+			inputDisplayMachine.displayPokemonCentreMenu();
 			choice = parseInt(scan.nextLine());
 
 			if (choice == 1) // heal pokemons
@@ -351,6 +358,7 @@ class PokeMelon
 
 	}
 
+	// Building 2: Gym Tower (Only available in Fruit City)
 
 	// method for displaying and managing boxes
 	private static void displayBoxesMenu (Player player, DisplayMachine inputDisplayMachine, Scanner scan)
@@ -361,37 +369,9 @@ class PokeMelon
 		while (true)
 		{
 
-			inputDisplayMachine.clearScreen();
-
-			String border = "=========================================================";
-			System.out.println(border);
-			System.out.println("\t\t\t📦 BOXES 📦");
-			System.out.println(border);
-
-			System.out.println("\n  Your Boxes:\n");
-
+			inputDisplayMachine.displayBoxesMenu(player);
 			Boxes boxes = player.getBoxes();
 			ArrayList<Pokemon> boxesList = boxes.getBoxes();
-
-			if (boxesList.size() == 0) System.out.println("  Your boxes are empty!");
-
-			else
-			{
-
-				for (int i = 0; i < boxesList.size(); i++)
-				{
-					System.out.print("  " + (i + 1) + ". ");
-					boxesList.get(i).displayGeneral();
-				}
-
-			}
-
-			System.out.println("\n  [1] Move Pokemon to Party");
-			System.out.println("  [2] Store Pokemon in Boxes");
-			System.out.println("  [0] Back\n");
-			System.out.println(border);
-			System.out.print("> ");
-
 			choice = parseInt(scan.nextLine());
 
 			if (choice == 1) // Move Pokemon from Boxes to Party
@@ -475,6 +455,79 @@ class PokeMelon
 
 	}
 
+
+	// -------------------- Option 4: Changing Area -------------------- //
+
+
+	public static void takeBus (Player player, DisplayMachine inputDisplayMachine, GameMap inputGameMap, Scanner scan)
+	{
+
+		int choice = -1;
+
+		while (true)
+		{
+
+			inputDisplayMachine.displayMapMenu(player);
+			choice = parseInt(scan.nextLine());
+			Area currentArea = player.getCurrentArea();
+
+			if (currentArea == null) // current area is empty
+			{
+				System.out.println("\n  Your current location is not set.");
+				waitForEnter(scan);
+				break;
+			}
+
+
+			Area nextArea = null;
+			String direction = ""; // for displaying message
+
+			if (choice == 0) break; // go back to main menu
+
+			else if (choice == 1) // go to the North
+			{
+				nextArea = currentArea.north;
+				direction = "north";
+			}
+
+			else if (choice == 2) // go to the South
+			{
+				nextArea = currentArea.south;
+				direction = "south";
+			}
+
+			else if (choice == 3) // go to the West
+			{
+				nextArea = currentArea.west;
+				direction = "west";
+			}
+
+			else if (choice == 4) // go to the East
+			{
+				nextArea = currentArea.east;
+				direction = "east";
+			}
+
+			else // invalid choice => ignore it and continue to get input
+			{
+				continue;
+			}
+
+			if (nextArea == null)
+			{
+				System.out.println("\n  You cannot go " + direction + " from " + currentArea.getName());
+				waitForEnter(scan);
+				continue;
+			}
+
+			player.setCurrentArea(nextArea);
+			System.out.println("\n  You take the bus " + direction + " to " + nextArea.getName() + "!");
+			waitForEnter(scan);
+		
+		}
+
+	}
+
 	
 	// -------------------- Option 5: Manage Party -------------------- //
 
@@ -487,22 +540,7 @@ class PokeMelon
 		while (true)
 		{
 
-			inputDisplayMachine.clearScreen();
-
-			String border = "=========================================================";
-			System.out.println(border);
-			System.out.println("\t\t  🐾 MANAGE PARTY 🐾");
-			System.out.println(border);
-
-			System.out.println("\n  Your Party:\n");
-			player.getParty().display();
-
-			System.out.println("\n  [1] View Pokemon Details");
-			System.out.println("  [2] Move Pokemon");
-			System.out.println("  [0] Back\n");
-			System.out.println(border);
-			System.out.print("> ");
-
+			inputDisplayMachine.displayManagePartyMenu(player);
 			choice = parseInt(scan.nextLine());
 
 			if (choice == 1) // Display full detail of pokemon
@@ -590,99 +628,28 @@ class PokeMelon
 		while (true)
 		{
 
-			inputDisplayMachine.clearScreen();
-
-			String border = "=========================================================";
-			System.out.println(border);
-
-			// Display player's active Pokemon at the top
-			System.out.println("\n  Your Active Pokemon:\n");
-			if (player.getParty().getSize() > 0)
-			{
-
-				Pokemon activePokemon = player.getParty().getPokemon(0);
-				if (activePokemon != null)
-				{
-					System.out.print("  ");
-					activePokemon.displayGeneral();
-				}
-
-			}
-
-			System.out.println(border);
-
-			// Display bag items in 2-column format (like combat inventory)
-			System.out.println("\n  BAG: Select an item to use:\n");
-
-			Inventory tmpInventory = player.getInventory();
-			int[] items = tmpInventory.getInventory();
-			int totalItems = 15;
-
-			// Loop through all 15 items, jumping by 2 for the columns
-			for (int i = 1; i <= totalItems; i += 2)
-			{
-
-				// Left column
-				Item leftItem;
-				if (i <= totalItems) leftItem = tmpInventory.getItem(i);
-				else leftItem = null;
-
-				String text1;
-				if (leftItem != null) text1 = leftItem.getName().toUpperCase() + " (x" + items[i] + ")";
-				else text1 = "None";
-
-				// Right column
-				Item rightItem;
-				if (i + 1 <= totalItems) rightItem = tmpInventory.getItem(i + 1);
-				else rightItem = null;
-
-				String text2;
-				if (rightItem != null) text2 = rightItem.getName().toUpperCase() + " (x" + items[i + 1] + ")";
-				else text2 = "None";
-
-				// display text1 | text2
-				if (i + 1 <= totalItems) System.out.printf("  [%2d] %-30s [%2d] %-30s\n", (i), text1, (i + 1), text2);
-				else System.out.printf("  [%2d] %-30s\n", (i), text1);
-
-			}
-
-			System.out.println("\n  [ 0] BACK");
-			System.out.println(border);
-			System.out.print("> ");
-
+			inputDisplayMachine.displayInventoryMenu(player);
 			choice = parseInt(scan.nextLine());
 
-			if (choice > 0 && choice <= 15)
+			if (choice > 0 && choice <= 15 && player.getInventory().getItemAmount(choice) > 0)
 			{
 
-				if (player.getInventory().getItemAmount(choice) > 0)
+				System.out.print("\n  Select Pokemon (1-" + player.getParty().getSize() + ") or 0 to cancel: ");
+				int pokemonId = parseInt(scan.nextLine());
+
+				if (pokemonId == 0) continue; // Do nothing, go back to item selection
+
+				else if (pokemonId > 0 && pokemonId <= player.getParty().getSize())
 				{
 
-					System.out.print("\n  Select Pokemon (1-" + player.getParty().getSize() + ") or 0 to cancel: ");
-					int pokemonId = parseInt(scan.nextLine());
+					Pokemon p = player.getParty().getPokemon(pokemonId - 1);
 
-					if (pokemonId == 0) continue; // Do nothing, go back to item selection
-
-					else if (pokemonId > 0 && pokemonId <= player.getParty().getSize())
+					// if pokemon != null && successfully using item
+					if (p != null && player.getInventory().getItem(choice).use(new Battle(player, new Trainer(null), false), p, scan))
 					{
-
-						Pokemon p = player.getParty().getPokemon(pokemonId - 1);
-						if (p != null)
-						{
-							player.getInventory().useItem(choice);
-							p.addHp(25); // Simple healing value
-							System.out.println("\n  " + p.getName() + " was healed!");
-							waitForEnter(scan);
-						}
-
+						player.getInventory().useItem(choice); // decrease amount of item by 1
 					}
 
-				}
-
-				else
-				{
-					System.out.println("\n  You don't have this item!");
-					waitForEnter(scan);
 				}
 
 			}
