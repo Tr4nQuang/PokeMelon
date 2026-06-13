@@ -13,12 +13,12 @@ public class Area
     /*
     Type of Area
     1. City
-    2. River
+    2. Harbor
     3. Ocean
     4. Dark biome
-    5. Rocky biome
+    5. Rocky & Hot biome
     6. Electric biome
-    7. Cold biome
+    7. Rocky & Cold biome
     8. Nature biome
     */
     private int type;
@@ -26,7 +26,7 @@ public class Area
     public char[][] map = new char[30][30]; // map of Area
     
     // area connections
-    Area north, south, west, east;
+    public Area north, south, west, east;
     
     
     // -------------------- CONSTRUCTORS -------------------- //
@@ -87,14 +87,4 @@ public class Area
         return this.type;
     }
 
-
-    // -------------------- METHODS -------------------- //
-
-
-    public void display ()
-    {
-        return;
-    }
-
-    
 }
