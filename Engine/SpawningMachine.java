@@ -383,7 +383,7 @@ public class SpawningMachine {
     }
 
     // method for spawning a pokemon in the area
-    public Pokemon spawnPokemon (Player player)
+    public Pokemon spawnPokemon (Player player, boolean isWildPokemon)
     {
 
         // created needed objects
@@ -572,9 +572,11 @@ public class SpawningMachine {
         int highestLevel = player.getHighestLevel();
 
         // spawn a pokemon
-        // random level from (highestLevel - 25) -> (highestLevel) of player's pokemon (max is 100)
+        // Wild pokemon: random level from (highestLevel - 25) -> (highestLevel) of player's pokemon (max is 100)
+        // Not wild pokemon: random level from (highestLevel - 10) -> (highestLevel) of player's pokemon (max is 100)
         // get max of (1, highestLevel - 25) => to avoid (highestLevel - 25) < 0
-        return new Pokemon(pokedex, pokemon.getId(), ran.nextInt(highestLevel - Math.max(1, (highestLevel - 25)) + 1) + Math.max(1, (highestLevel - 25)));
+        if (isWildPokemon) return new Pokemon(pokedex, pokemon.getId(), ran.nextInt(highestLevel - Math.max(1, (highestLevel - 25)) + 1) + Math.max(1, (highestLevel - 25)));
+        else return new Pokemon(pokedex, pokemon.getId(), ran.nextInt(highestLevel - Math.max(1, (highestLevel - 10)) + 1) + Math.max(1, (highestLevel - 10)));
 
     }
 
